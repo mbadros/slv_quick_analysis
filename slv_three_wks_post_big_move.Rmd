@@ -1,0 +1,131 @@
+---
+title: "Silver's Price Performance Subsequent to Major One-Day Changes"
+author: "Mark J. Badros, CFA"
+date: "September 13, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options("getSymbols.yahoo.warning" = FALSE)
+```
+
+## Statement of the Problem
+
+This short study analyzes the price performance of the iShares Silver Trust ("silver"; ticker:SLV) during the three-week period (15 trading days) following any day that the closing price of SLV changed (up or down) by at least 3% from the previous close.
+
+## Data and Price Changes
+
+From Yahoo! Finance's API, I obtained the daily closing price history of SLV for the period beginning January 3, 2007 through September 11, 2018, which represents over 11 years of data and includes 2,944 observations.
+
+Below is a chart of SLV's daily closing price over this period:
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE }
+library(quantmod)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+
+silver <- getSymbols('SLV', auto.assign = F)
+candleChart(silver,multi.col=TRUE,theme='white', TA = NULL)
+```
+
+### Significant Daily Moves
+
+A daily price change was significant if SLV's closing price moved up or down at least 3% from the previous close.
+
+Below is a table summarizing the number of observations classified as a large decline (-3% or worse), a small decline (no change or less than 3% decline), a small gain (positive but not more than 3%) or a large gain (greater than 3%). (I have excluded the first observation because the change from the previous close was unavailable.)
+
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE }
+silver_tbl <- as.tbl(data.frame(index(silver),
+                             coredata(silver$SLV.Close),
+                             log(coredata(silver$SLV.Close))))
+
+colnames(silver_tbl) <- c("date", "close", "log_close")
+
+silver_tbl <- silver_tbl %>% mutate(daily_pct_chg = 100 * (log_close - Lag(log_close)))
+
+silver_tbl <- silver_tbl %>% mutate(big_move = cut(silver_tbl$daily_pct_chg,
+                                                   breaks = c(-Inf, -3, 0, 3, Inf),
+                                                   labels = c('Large Decline',
+                                                              'Small Decline',
+                                                              'Small Gain',
+                                                              'Large Gain')))
+
+silver_tbl %>% filter(!is.na(big_move)) %>% count(big_move) %>% mutate(Percentage = round(100 * prop.table(n), 1)) %>% kable() %>% kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+```
+
+For each trading day, I calculated the simple return from the closing price to:
+- the closing price 15 trading days later, 
+- the maximum closing price achieved during this period, and
+- the lowest closing price realized during this period.
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE }
+
+silver_tbl <- silver_tbl %>% mutate(maxup = rollmax(silver_tbl$close, 15, align = 'left',
+                                                    na.pad = T),
+                                    maxdown = -1 * rollmax(-silver_tbl$close, 15, 
+                                                           align = 'left', na.pad = T),
+                                    fwd3wks = lead(silver_tbl$close, 15) )
+                              
+
+silver_tbl <- silver_tbl %>% mutate(return_fwd3wks = 100 * (log(silver_tbl$fwd3wks) - 
+                                                                silver_tbl$log_close),
+                                    max_up_pct = 100 * (log(silver_tbl$maxup) -
+                                                            silver_tbl$log_close), 
+                                    max_down_pct = 100 * (log(silver_tbl$maxdown) -
+                                                              silver_tbl$log_close) )
+
+```
+
+Below is a plot of the simple return over 15 trading days (typically three weeks, ignoring holidays) following a daily price change +/- 3%, as well as the simple return following a small daily price change. The boxplot overlay shows the 25th, 50th and 75th percentiles for returns observed. (Obviously, the returns for the most recent observations are as yet unknown because 15 days haven't elapsed.)
+
+``` {r, echo = FALSE, message=FALSE, warning=FALSE }
+g4 <- silver_tbl %>% filter(!is.na(big_move)) %>% ggplot(aes(x = big_move, y = return_fwd3wks,
+                              color = big_move) ) + geom_jitter() + geom_boxplot(alpha = 0.5)
+g4 + theme(legend.position = 'none') + 
+    labs(title = "SLV's Price Performance Following Major Daily Price Change",
+         subtitle = "To Closing Price 15 Trading Days Later",
+         y = "Return (in %)",
+         x = "\nInitial Daily Price Change")
+```
+
+### Price Performance to Highest Close over Next 15 Trading Days
+
+Below is a plot of the return from a daily closing price to the maximum closing price attained during the subsequent 15 days. Again, the boxplot shows the 25th, 50th and 75th percentiles of this maximum (hypothetically) attainable return.
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE }
+g2 <-  silver_tbl %>% filter(!is.na(big_move)) %>% ggplot(aes(x = big_move, y = max_up_pct,
+                                                              color = big_move) ) +
+    geom_jitter() + geom_boxplot(alpha = 0.5)
+g2 + theme(legend.position = 'none') + 
+    labs(title = "SLV's Peak Performance Following Major Daily Price Change",
+         subtitle = "To Maximum Closing Price Within Subsequent 15 Trading Days",
+         y = 'Maximum Hypothetical Return (in %)',
+         x = "\nInitial Daily Price Change")
+```
+
+
+### Worst Drawdown over Subsequent 15 Trading Days
+
+Below is a plot of the return from a daily closing price to the lowest closing price observed during subsequent 15 days. Again, the boxplot shows the 25th, 50th and 75th percentiles of this worst realizable return.
+
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
+
+g3 <-  silver_tbl %>% filter(!is.na(big_move)) %>% ggplot(aes(x = big_move, y = max_down_pct,
+                                                              color = big_move) ) +
+    geom_jitter() + geom_boxplot(alpha = 0.5)
+g3 + theme(legend.position = 'none') + 
+    labs(title = "SLV's Worst Drawdown Following Major Daily Price Change",
+         subtitle = "To Lowest Closing Price Within Subsequent 15 Trading Days",
+         y = 'Worst Hypothetical Return (in %)',
+         x = "\nInitial Daily Price Change")
+
+
+```
+
+
