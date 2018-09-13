@@ -2,7 +2,9 @@
 title: "Silver's Price Performance Subsequent to Major One-Day Changes"
 author: "Mark J. Badros, CFA"
 date: "September 13, 2018"
-output: html_document
+output:
+  html_document: default
+always_allow_html: yes
 ---
 
 ```{r setup, include=FALSE, message=FALSE, warning=FALSE}
@@ -14,7 +16,7 @@ options("getSymbols.yahoo.warning" = FALSE)
 
 This short study analyzes the price performance of the iShares Silver Trust ("silver"; ticker:SLV) during the three-week period (15 trading days) following any day that the closing price of SLV changed (up or down) by at least 3% from the previous close.
 
-## Data and Price Changes
+## Historical Closing Price Data
 
 From Yahoo! Finance's API, I obtained the daily closing price history of SLV for the period beginning January 3, 2007 through September 11, 2018, which represents over 11 years of data and includes 2,944 observations.
 
@@ -33,7 +35,7 @@ candleChart(silver,multi.col=TRUE,theme='white', TA = NULL)
 
 ### Significant Daily Moves
 
-A daily price change was significant if SLV's closing price moved up or down at least 3% from the previous close.
+A daily price change was significant if SLV's closing price moved up or down at least 3% from the previous close (a "Major Daily Move").
 
 Below is a table summarizing the number of observations classified as a large decline (-3% or worse), a small decline (no change or less than 3% decline), a small gain (positive but not more than 3%) or a large gain (greater than 3%). (I have excluded the first observation because the change from the previous close was unavailable.)
 
@@ -58,6 +60,8 @@ silver_tbl %>% filter(!is.na(big_move)) %>% count(big_move) %>% mutate(Percentag
 
 ```
 
+This study is primarily concerned with the ~10.8% of days when SLV's closing price changes by 3% or more from its previous close.
+
 For each trading day, I calculated the simple return from the closing price to:
 - the closing price 15 trading days later, 
 - the maximum closing price achieved during this period, and
@@ -81,17 +85,26 @@ silver_tbl <- silver_tbl %>% mutate(return_fwd3wks = 100 * (log(silver_tbl$fwd3w
 
 ```
 
-Below is a plot of the simple return over 15 trading days (typically three weeks, ignoring holidays) following a daily price change +/- 3%, as well as the simple return following a small daily price change. The boxplot overlay shows the 25th, 50th and 75th percentiles for returns observed. (Obviously, the returns for the most recent observations are as yet unknown because 15 days haven't elapsed.)
+Below is a plot of the simple return over 15 trading days (typically three weeks, ignoring holidays) following a Major Daily Move, as well as the simple return following a small daily price change. The boxplot overlay shows the 25th, 50th and 75th percentiles for returns observed. (Obviously, the returns for the most recent observations are as yet unknown because 15 days haven't elapsed.)
 
 ``` {r, echo = FALSE, message=FALSE, warning=FALSE }
+
+red_green_scale <- scale_color_manual(values = c("#d7191c",
+                                                 "#fdae61",
+                                                 "#a6d96a",
+                                                 "#1a9641"))
+
 g4 <- silver_tbl %>% filter(!is.na(big_move)) %>% ggplot(aes(x = big_move, y = return_fwd3wks,
                               color = big_move) ) + geom_jitter() + geom_boxplot(alpha = 0.5)
+
 g4 + theme(legend.position = 'none') + 
     labs(title = "SLV's Price Performance Following Major Daily Price Change",
          subtitle = "To Closing Price 15 Trading Days Later",
          y = "Return (in %)",
-         x = "\nInitial Daily Price Change")
+         x = "\nInitial Daily Price Change") + red_green_scale
 ```
+
+From this plot, you can see a slightly higher return over the next 15 trading days after a Major Daily Move, compared to days where the closing price has a smaller change.
 
 ### Price Performance to Highest Close over Next 15 Trading Days
 
@@ -105,9 +118,10 @@ g2 + theme(legend.position = 'none') +
     labs(title = "SLV's Peak Performance Following Major Daily Price Change",
          subtitle = "To Maximum Closing Price Within Subsequent 15 Trading Days",
          y = 'Maximum Hypothetical Return (in %)',
-         x = "\nInitial Daily Price Change")
+         x = "\nInitial Daily Price Change") + red_green_scale
 ```
 
+This plot depicts a larger effect where the percentage change to the highest close over the next 15 trading days is greater after a Major Daily Move (either up or down) than after a smaller daily price change.
 
 ### Worst Drawdown over Subsequent 15 Trading Days
 
@@ -123,9 +137,11 @@ g3 + theme(legend.position = 'none') +
     labs(title = "SLV's Worst Drawdown Following Major Daily Price Change",
          subtitle = "To Lowest Closing Price Within Subsequent 15 Trading Days",
          y = 'Worst Hypothetical Return (in %)',
-         x = "\nInitial Daily Price Change")
+         x = "\nInitial Daily Price Change") + red_green_scale
 
 
 ```
 
+On average, the price change to the lowest closing price within the 15 trading days after a Major Daily Move is very slightly worse than after other trading days.
 
+Code, underlying numerical results and calculations, and additional analyses available upon request. Please contact the author at [mbadros@timberlakecapital.com](mailto:mbadros@gmail.com).
