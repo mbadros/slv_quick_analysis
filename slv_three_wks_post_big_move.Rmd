@@ -3,7 +3,9 @@ title: "Silver's Price Performance Subsequent to Major One-Day Changes"
 author: "Mark J. Badros, CFA"
 date: "September 13, 2018"
 output:
-  pdf_document: default
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
   html_document: default
 always_allow_html: yes
 ---
