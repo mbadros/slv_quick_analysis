@@ -36,7 +36,7 @@ silver <- getSymbols('SLV', auto.assign = F)
 candleChart(silver,multi.col=TRUE,theme='white', TA = NULL)
 ```
 
-### Significant Daily Moves
+## Significant Daily Moves
 
 A daily price change was significant if SLV's closing price moved up or down at least 3% from the previous close (a "Major Daily Move").
 
@@ -109,7 +109,7 @@ g4 + theme(legend.position = 'none') +
 
 From this plot, you can see a slightly higher return over the next 15 trading days after a Major Daily Move, compared to days where the closing price has a smaller change.
 
-### Price Performance to Highest Close over Next 15 Trading Days
+## Price Performance to Highest Close over Next 15 Trading Days
 
 Below is a plot of the return from a daily closing price to the maximum closing price attained during the subsequent 15 days. Again, the boxplot shows the 25th, 50th and 75th percentiles of this maximum (hypothetically) attainable return.
 
@@ -126,7 +126,7 @@ g2 + theme(legend.position = 'none') +
 
 This plot depicts a larger effect where the percentage change to the highest close over the next 15 trading days is greater after a Major Daily Move (either up or down) than after a smaller daily price change.
 
-### Worst Drawdown over Subsequent 15 Trading Days
+## Worst Drawdown over Subsequent 15 Trading Days
 
 Below is a plot of the return from a daily closing price to the lowest closing price observed during subsequent 15 days. Again, the boxplot shows the 25th, 50th and 75th percentiles of this worst realizable return.
 
