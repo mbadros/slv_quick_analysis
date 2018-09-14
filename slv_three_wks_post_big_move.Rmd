@@ -3,6 +3,7 @@ title: "Silver's Price Performance Subsequent to Major One-Day Changes"
 author: "Mark J. Badros, CFA"
 date: "September 13, 2018"
 output:
+  pdf_document: default
   html_document: default
 always_allow_html: yes
 ---
@@ -56,7 +57,7 @@ silver_tbl <- silver_tbl %>% mutate(big_move = cut(silver_tbl$daily_pct_chg,
                                                               'Small Gain',
                                                               'Large Gain')))
 
-silver_tbl %>% filter(!is.na(big_move)) %>% count(big_move) %>% mutate(Percentage = round(100 * prop.table(n), 1)) %>% kable() %>% kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+silver_tbl %>% filter(!is.na(big_move)) %>% count(big_move) %>% mutate(Percentage = round(100 * prop.table(n), 1)) %>% kable() %>% kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
 
 ```
 
